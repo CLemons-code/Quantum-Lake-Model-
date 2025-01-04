@@ -33,4 +33,4 @@ Expanding the lake model to include string theory adds a fascinating dimension t
 - **Interactions and Unification**:
   - **Quantum Mechanics and General Relativity**: Now, these interactions aren't just confined to one lake but happen across all layers. A boat (particle) in one lake might be influenced by the curvature of an island below or above it, symbolizing how quantum mechanics and gravity interact across dimensions.
   - **String Theory's Role**: The vibrations in these stacked lakes could explain how fundamental forces, including gravity, are unified. Each lake layer might have its own set of vibrations, but they're all part of the same interconnected system.
-##Quantum Lake Model © 2025 by Christopher Alan Lemons is licensed under CC BY-SA 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/4.0/
+-##Quantum Lake Model © 2025 by Christopher Alan Lemons is licensed under CC BY-SA 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/4.0/
