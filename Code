@@ -1,0 +1,115 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Define the lake as a circle
+theta = np.linspace(0, 2*np.pi, 100)
+lake_radius = 10
+lake_x = lake_radius * np.cos(theta)
+lake_y = lake_radius * np.sin(theta)
+
+# Define islands (let's say two for simplicity)
+island1_center = (3, 3)
+island1_radius = 1
+island2_center = (-3, -3)
+island2_radius = 1
+
+# Create the plot
+fig, ax = plt.subplots()
+
+# Plot the lake
+ax.plot(lake_x, lake_y, 'b-', label='Lake')
+ax.fill(lake_x, lake_y, 'lightblue')
+
+# Plot islands
+island1_circle = plt.Circle(island1_center, island1_radius, color='brown', fill=True)
+island2_circle = plt.Circle(island2_center, island2_radius, color='brown', fill=True)
+ax.add_artist(island1_circle)
+ax.add_artist(island2_circle)
+
+# Optional: Add quantum particles (boats)
+for _ in range(5):  # 5 particles for demonstration
+    x = np.random.uniform(-lake_radius, lake_radius)
+    y = np.random.uniform(-lake_radius, lake_radius)
+    # Check if the particle is inside the lake
+    if np.sqrt(x**2 + y**2) < lake_radius:
+        ax.plot(x, y, 'ro', markersize=3)
+
+ax.set_aspect('equal', 'box')
+ax.set_xlim(-lake_radius-2, lake_radius+2)
+ax.set_ylim(-lake_radius-2, lake_radius+2)
+ax.legend()
+plt.title('Quantum Lake Model (Static View)')
+plt.show()
+
+import pygame
+import math
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+width, height = 800, 800
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption("Quantum Lake Model")
+
+# Colors
+BLACK = (0, 0, 0)
+BLUE = (0, 0, 255)
+BROWN = (139, 69, 19)
+RED = (255, 0, 0)
+
+# Lake parameters
+lake_radius = width // 2 - 50
+lake_center = (width // 2, height // 2)
+
+# Islands
+islands = [
+    {'center': (width // 2 + 100, height // 2 + 100), 'radius': 50},
+    {'center': (width // 2 - 100, height // 2 - 100), 'radius': 50, 'has_lake': True, 'inner_radius': 20}
+]
+
+# Particles (boats)
+particles = []
+for _ in range(10):  # 10 particles
+    angle = random.uniform(0, 2 * math.pi)
+    r = random.uniform(0, lake_radius)
+    x = lake_center[0] + r * math.cos(angle)
+    y = lake_center[1] + r * math.sin(angle)
+    particles.append({'pos': (x, y), 'speed': (random.uniform(-1, 1), random.uniform(-1, 1))})
+
+# Main game loop
+running = True
+clock = pygame.time.Clock()
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Clear the screen
+    screen.fill(BLACK)
+
+    # Draw the lake
+    pygame.draw.circle(screen, BLUE, lake_center, lake_radius)
+
+    # Draw islands
+    for island in islands:
+        pygame.draw.circle(screen, BROWN, island['center'], island['radius'])
+        if 'has_lake' in island and island['has_lake']:
+            pygame.draw.circle(screen, BLUE, island['center'], island['inner_radius'])
+
+    # Move and draw particles (simplified movement)
+    for particle in particles:
+        # Simple boundary check
+        if math.sqrt((particle['pos'][0] - lake_center[0])**2 + (particle['pos'][1] - lake_center[1])**2) > lake_radius:
+            # Reflect off the edge of the lake
+            particle['speed'] = (-particle['speed'][0], -particle['speed'][1])
+        
+        # Update position
+        particle['pos'] = (particle['pos'][0] + particle['speed'][0], particle['pos'][1] + particle['speed'][1])
+        pygame.draw.circle(screen, RED, [int(x) for x in particle['pos']], 5)
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
