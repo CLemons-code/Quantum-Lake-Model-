@@ -1,82 +1,68 @@
-import matplotlib.pyplot as plt
-import numpy as np
-
-# Define the lake as a circle
-theta = np.linspace(0, 2*np.pi, 100)
-lake_radius = 10
-lake_x = lake_radius * np.cos(theta)
-lake_y = lake_radius * np.sin(theta)
-
-# Define islands (let's say two for simplicity)
-island1_center = (3, 3)
-island1_radius = 1
-island2_center = (-3, -3)
-island2_radius = 1
-
-# Create the plot
-fig, ax = plt.subplots()
-
-# Plot the lake
-ax.plot(lake_x, lake_y, 'b-', label='Lake')
-ax.fill(lake_x, lake_y, 'lightblue')
-
-# Plot islands
-island1_circle = plt.Circle(island1_center, island1_radius, color='brown', fill=True)
-island2_circle = plt.Circle(island2_center, island2_radius, color='brown', fill=True)
-ax.add_artist(island1_circle)
-ax.add_artist(island2_circle)
-
-# Optional: Add quantum particles (boats)
-for _ in range(5):  # 5 particles for demonstration
-    x = np.random.uniform(-lake_radius, lake_radius)
-    y = np.random.uniform(-lake_radius, lake_radius)
-    # Check if the particle is inside the lake
-    if np.sqrt(x**2 + y**2) < lake_radius:
-        ax.plot(x, y, 'ro', markersize=3)
-
-ax.set_aspect('equal', 'box')
-ax.set_xlim(-lake_radius-2, lake_radius+2)
-ax.set_ylim(-lake_radius-2, lake_radius+2)
-ax.legend()
-plt.title('Quantum Lake Model (Static View)')
-plt.show()
-
 import pygame
 import math
 import random
+import numpy as np
 
 # Initialize Pygame
 pygame.init()
 
 # Set up the display
-width, height = 800, 800
+width, height = 1000, 1000
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Quantum Lake Model")
+pygame.display.set_caption("Quantum Lake Model - Enhanced")
 
 # Colors
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
+DARK_BLUE = (0, 0, 150)
 BROWN = (139, 69, 19)
 RED = (255, 0, 0)
+WHITE = (255, 255, 255)
 
 # Lake parameters
-lake_radius = width // 2 - 50
+lake_radius = width // 2 - 100
 lake_center = (width // 2, height // 2)
+
+# Gravitational constant (simplified for scale)
+G = 0.1
 
 # Islands
 islands = [
-    {'center': (width // 2 + 100, height // 2 + 100), 'radius': 50},
-    {'center': (width // 2 - 100, height // 2 - 100), 'radius': 50, 'has_lake': True, 'inner_radius': 20}
+    {'center': (width // 2 + 200, height // 2 + 200), 'radius': 50, 'mass': 1000},
+    {'center': (width // 2 - 200, height // 2 - 200), 'radius': 50, 'mass': 1000, 'has_lake': True, 'inner_radius': 20}
 ]
+
+# Black Hole
+black_hole = {'center': lake_center, 'radius': 30, 'mass': 5000}
 
 # Particles (boats)
 particles = []
-for _ in range(10):  # 10 particles
+for _ in range(20):
     angle = random.uniform(0, 2 * math.pi)
     r = random.uniform(0, lake_radius)
     x = lake_center[0] + r * math.cos(angle)
     y = lake_center[1] + r * math.sin(angle)
-    particles.append({'pos': (x, y), 'speed': (random.uniform(-1, 1), random.uniform(-1, 1))})
+    particles.append({
+        'pos': [x, y],
+        'speed': [random.uniform(-1, 1), random.uniform(-1, 1)],
+        'superposed': random.choice([False, True]),  # Simulate superposition
+        'entangled_with': None  # For entangled particles
+    })
+
+# Entanglement setup (pair some particles)
+for i in range(0, len(particles)-1, 2):
+    particles[i]['entangled_with'] = i + 1
+    particles[i+1]['entangled_with'] = i
+
+# User editable parameters
+particle_speed_scale = 1.0
+island_mass_scale = 1.0
+black_hole_mass_scale = 1.0
+show_superposition = True
+show_entanglement = True
+
+# Font for UI
+font = pygame.font.SysFont(None, 24)
 
 # Main game loop
 running = True
@@ -85,31 +71,92 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_s:  # Speed adjustment
+                particle_speed_scale += 0.1 if particle_speed_scale < 2.0 else 0
+            elif event.key == pygame.K_a:
+                particle_speed_scale -= 0.1 if particle_speed_scale > 0.1 else 0
+            elif event.key == pygame.K_m:  # Island mass adjustment
+                island_mass_scale += 0.1 if island_mass_scale < 2.0 else 0
+            elif event.key == pygame.K_n:
+                island_mass_scale -= 0.1 if island_mass_scale > 0.1 else 0
+            elif event.key == pygame.K_b:  # Black hole mass adjustment
+                black_hole_mass_scale += 0.1 if black_hole_mass_scale < 2.0 else 0
+            elif event.key == pygame.K_v:
+                black_hole_mass_scale -= 0.1 if black_hole_mass_scale > 0.1 else 0
+            elif event.key == pygame.K_q:  # Toggle superposition
+                show_superposition = not show_superposition
+            elif event.key == pygame.K_e:  # Toggle entanglement
+                show_entanglement = not show_entanglement
 
-    # Clear the screen
+    # Clear screen
     screen.fill(BLACK)
 
-    # Draw the lake
-    pygame.draw.circle(screen, BLUE, lake_center, lake_radius)
+    # Draw lake with gradient
+    for r in range(lake_radius, 0, -10):
+        alpha = int(255 * (r / lake_radius))
+        pygame.draw.circle(screen, (0, 0, alpha), lake_center, r)
 
-    # Draw islands
+    # Draw islands with gravitational influence
     for island in islands:
+        mass = island['mass'] * island_mass_scale
         pygame.draw.circle(screen, BROWN, island['center'], island['radius'])
         if 'has_lake' in island and island['has_lake']:
-            pygame.draw.circle(screen, BLUE, island['center'], island['inner_radius'])
+            pygame.draw.circle(screen, DARK_BLUE, island['center'], island['inner_radius'])
 
-    # Move and draw particles (simplified movement)
+    # Draw black hole
+    mass = black_hole['mass'] * black_hole_mass_scale
+    pygame.draw.circle(screen, (50, 0, 50), black_hole['center'], black_hole['radius'])
+
+    # Update and draw particles
     for particle in particles:
-        # Simple boundary check
-        if math.sqrt((particle['pos'][0] - lake_center[0])**2 + (particle['pos'][1] - lake_center[1])**2) > lake_radius:
-            # Reflect off the edge of the lake
-            particle['speed'] = (-particle['speed'][0], -particle['speed'][1])
-        
+        # Gravitational force from black hole
+        dx = black_hole['center'][0] - particle['pos'][0]
+        dy = black_hole['center'][1] - particle['pos'][1]
+        dist = max(math.sqrt(dx**2 + dy**2), 1)  # Avoid division by zero
+        force = G * mass / (dist**2)
+        particle['speed'][0] += force * dx / dist
+        particle['speed'][1] += force * dy / dist
+
+        # Gravitational force from islands
+        for island in islands:
+            dx = island['center'][0] - particle['pos'][0]
+            dy = island['center'][1] - particle['pos'][1]
+            dist = max(math.sqrt(dx**2 + dy**2), island['radius'])
+            force = G * island['mass'] * island_mass_scale / (dist**2)
+            particle['speed'][0] += force * dx / dist
+            particle['speed'][1] += force * dy / dist
+
         # Update position
-        particle['pos'] = (particle['pos'][0] + particle['speed'][0], particle['pos'][1] + particle['speed'][1])
+        particle['pos'][0] += particle['speed'][0] * particle_speed_scale
+        particle['pos'][1] += particle['speed'][1] * particle_speed_scale
+
+        # Boundary check
+        if math.sqrt((particle['pos'][0] - lake_center[0])**2 + (particle['pos'][1] - lake_center[1])**2) > lake_radius:
+            particle['speed'] = [-particle['speed'][0], -particle['speed'][1]]
+
+        # Draw particle
         pygame.draw.circle(screen, RED, [int(x) for x in particle['pos']], 5)
+        if show_superposition and particle['superposed']:
+            pygame.draw.circle(screen, (255, 0, 0, 100), [int(particle['pos'][0] + 10), int(particle['pos'][1] + 10)], 5, 2)
+        if show_entanglement and particle['entangled_with'] is not None:
+            entangled_pos = particles[particle['entangled_with']]['pos']
+            pygame.draw.line(screen, WHITE, particle['pos'], entangled_pos, 1)
+
+    # UI Text
+    ui_text = [
+        f"Particle Speed: {particle_speed_scale:.1f} (S/A)",
+        f"Island Mass: {island_mass_scale:.1f} (M/N)",
+        f"Black Hole Mass: {black_hole_mass_scale:.1f} (B/V)",
+        f"Superposition: {show_superposition} (Q)",
+        f"Entanglement: {show_entanglement} (E)"
+    ]
+    for i, text in enumerate(ui_text):
+        label = font.render(text, True, WHITE)
+        screen.blit(label, (10, 10 + i * 30))
 
     pygame.display.flip()
     clock.tick(60)
 
 pygame.quit()
+​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
